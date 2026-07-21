@@ -125,7 +125,7 @@ def optical_density(
 def modified_beer_lambert(
     od: np.ndarray,
     wavelengths: np.ndarray,
-    d: np.ndarray | None = None,
+    d: np.ndarray,
     dpf: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Convert multi-wavelength optical density to HbO/HbR concentrations.
@@ -137,9 +137,8 @@ def modified_beer_lambert(
         for interleaved channels.
     wavelengths : np.ndarray
         Wavelengths in nm, shape ``(n_wl,)``.
-    d : np.ndarray or None
-        Source–detector distances in cm, shape ``(n_sd_pairs,)``. If None,
-        defaults to 3.0 cm for all pairs.
+    d : np.ndarray
+        Source–detector distances in cm, shape ``(n_sd_pairs,)``.
     dpf : np.ndarray or None
         DPF per wavelength. Estimated via Scholkmann-Wolf if None.
 
@@ -150,6 +149,7 @@ def modified_beer_lambert(
     """
     od = np.asarray(od, dtype=np.float64)
     wavelengths = np.asarray(wavelengths, dtype=np.float64)
+    d = np.asarray(d, dtype=np.float64)
     n_wl = len(wavelengths)
 
     # Normalise shape to (n_times, n_wl, n_sd)
@@ -165,13 +165,6 @@ def modified_beer_lambert(
         od = od.reshape(n_times, n_wl, n_sd)
     else:
         raise ValueError(f"od must be 2-D or 3-D, got {od.shape}")
-
-    if d is None:
-        d = np.full(n_sd, 3.0, dtype=np.float64)
-    else:
-        d = np.asarray(d, dtype=np.float64)
-        if d.shape != (n_sd,):
-            raise ValueError(f"d must have shape ({n_sd},), got {d.shape}")
 
     # Extinction matrix + DPF
     E = extinction_matrix(wavelengths)
@@ -212,7 +205,13 @@ def compute_hbo_hbr(
     intensity : np.ndarray
         Raw intensity, shape ``(n_times, n_wl, n_sd)`` or interleaved ``(n_times, n_total)``.
     wavelengths : np.ndarray — shape ``(n_wl,)``.
-    d : np.ndarray or None — S-D distances, shape ``(n_sd,)``. Defaults to 3.0 cm.
+    d : np.ndarray or None
+        S-D distances, shape ``(n_sd,)``. ``n_sd`` is the number of
+        source-detector pairs, i.e. ``n_total_channels / n_wl`` — NOT the
+        raw channel count of ``intensity``, since each S-D pair contributes
+        one channel per wavelength. If omitted, defaults to 3.0 cm per
+        S-D pair (a typical adult-scalp separation), correctly sized
+        from ``intensity`` and ``wavelengths``.
     dpf : np.ndarray or None
     baseline : np.ndarray or None
 
@@ -221,4 +220,9 @@ def compute_hbo_hbr(
     hbo, hbr : np.ndarray — each shape ``(n_times, n_sd)`` in µM.
     """
     od = optical_density(intensity, baseline=baseline)
+    if d is None:
+        n_wl = len(np.asarray(wavelengths))
+        n_total = np.asarray(intensity).shape[1] if np.asarray(intensity).ndim == 2 else np.asarray(intensity).shape[2]
+        n_sd = n_total // n_wl if np.asarray(intensity).ndim == 2 else n_total
+        d = np.full(n_sd, 3.0)
     return modified_beer_lambert(od, wavelengths, d, dpf=dpf)
