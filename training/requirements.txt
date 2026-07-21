@@ -20,7 +20,7 @@ pandas>=2.0
 matplotlib>=3.7
 
 # === Training Utilities ===
-tqdm>=4.60
+tqdm>=4.69.0
 
 # === Experiment Tracking (optional) ===
 wandb>=0.15
