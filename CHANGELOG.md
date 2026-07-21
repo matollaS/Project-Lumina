@@ -19,4 +19,4 @@ All notable changes to `nlcore` are documented in this file.
 - **Tooling** — `pyproject.toml`, `setup.py`, GitHub Actions CI, pytest suite
   (33 tests), Sphinx docs, example pipeline script, Apache 2.0 license.
 
-[0.1.0]: https://github.com/neurolumina/nlcore/releases/tag/v0.1.0
+[0.1.0]: https://github.com/matollaS/Project-Lumina/releases/tag/v0.1.0

@@ -14,7 +14,7 @@ Key conventions
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -36,9 +36,9 @@ class SourceDetectorMap:
 
     def __init__(
         self,
-        sources: List[str],
-        detectors: List[str],
-        pairs: List[Tuple[int, int]],
+        sources: list[str],
+        detectors: list[str],
+        pairs: list[tuple[int, int]],
         wavelengths: np.ndarray,
     ) -> None:
         self.sources = sources
@@ -62,6 +62,7 @@ class SourceDetectorMap:
     def mne_info(self, sfreq: float) -> dict:
         """Build an MNE ``Info``-compatible dictionary."""
         import mne
+
         ch_names = self.channel_names
         ch_types = ["fnirs_cw_amplitude"] * self.n_channels
         return mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
@@ -73,7 +74,7 @@ def raw_to_mne(
     sd_map: SourceDetectorMap,
     *,
     ch_types: str = "fnirs_cw_amplitude",
-) -> Any:   # mne.io.Raw
+) -> Any:  # mne.io.Raw
     """Wrap a numpy array as an MNE `Raw` object.
 
     Parameters
@@ -97,6 +98,7 @@ def raw_to_mne(
     Requires ``mne`` to be installed.
     """
     import mne
+
     # Ensure data is (n_channels, n_times)
     data = np.asarray(data)
     if data.shape[0] != sd_map.n_channels:
@@ -105,15 +107,15 @@ def raw_to_mne(
             data = data.T
         else:
             raise ValueError("Data shape must match number of channels in sd_map")
-            
+
     info = sd_map.mne_info(sfreq)
     raw = mne.io.RawArray(data, info)
     return raw
 
 
 def mne_to_raw(
-    raw: Any,   # mne.io.Raw
-) -> Tuple[np.ndarray, float, SourceDetectorMap]:
+    raw: Any,  # mne.io.Raw
+) -> tuple[np.ndarray, float, SourceDetectorMap]:
     """Extract data array and metadata from an MNE `Raw` object.
 
     Parameters
@@ -133,12 +135,12 @@ def mne_to_raw(
     data = raw.get_data()
     sfreq = raw.info["sfreq"]
     ch_names = raw.info["ch_names"]
-    
+
     sources = []
     detectors = []
     pairs = []
     wavelengths = []
-    
+
     for ch in ch_names:
         src, det, wl = ch_name_to_source_detector(ch)
         if src not in sources:
@@ -147,7 +149,7 @@ def mne_to_raw(
             detectors.append(det)
         pairs.append((sources.index(src), detectors.index(det)))
         wavelengths.append(wl if wl is not None else 0.0)
-        
+
     sd_map = SourceDetectorMap(sources, detectors, pairs, np.array(wavelengths))
     return data, sfreq, sd_map
 
@@ -156,9 +158,10 @@ def mne_to_raw(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def ch_name_to_source_detector(
     ch_name: str,
-) -> Tuple[str, str, Optional[float]]:
+) -> tuple[str, str, float | None]:
     """Parse an MNE fNIRS channel name into source, detector, wavelength.
 
     >>> ch_name_to_source_detector("S1-D1 760")
@@ -174,9 +177,9 @@ def ch_name_to_source_detector(
 
 
 def build_sd_map(
-    sources: List[str],
-    detectors: List[str],
-    pairs: List[Tuple[int, int]],
+    sources: list[str],
+    detectors: list[str],
+    pairs: list[tuple[int, int]],
     wavelengths: np.ndarray,
 ) -> SourceDetectorMap:
     """Factory to create a SourceDetectorMap (alias for the constructor)."""

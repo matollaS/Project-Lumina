@@ -25,10 +25,9 @@ Data model
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, Union
 
-import numpy as np
 import h5py
+import numpy as np
 
 
 def _decode_bytes(val):
@@ -71,10 +70,10 @@ class SnirfFile:
         Open mode (``'r'``, ``'r+'``, ``'w'``).  Default ``'r'``.
     """
 
-    def __init__(self, fname: Union[str, Path], mode: str = "r") -> None:
+    def __init__(self, fname: str | Path, mode: str = "r") -> None:
         self._fname = Path(fname)
         self._mode = mode
-        self._h5: Optional[h5py.File] = None
+        self._h5: h5py.File | None = None
 
     @property
     def h5(self) -> h5py.File:
@@ -161,7 +160,7 @@ class SnirfFile:
             self._h5.close()
             self._h5 = None
 
-    def __enter__(self) -> "SnirfFile":
+    def __enter__(self) -> SnirfFile:
         return self
 
     def __exit__(self, *args) -> None:
@@ -172,8 +171,9 @@ class SnirfFile:
 # Convenience top-level functions
 # ---------------------------------------------------------------------------
 
+
 def load_snirf(
-    fname: Union[str, Path],
+    fname: str | Path,
     run_index: int = 0,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Load time-series data and metadata from a SNIRF file.
@@ -206,9 +206,7 @@ def load_snirf(
         meta["_n_runs"] = sf.n_runs
 
         if "probe_coords" in data:
-            meta["_probe_coords"] = {
-                k: v.tolist() for k, v in data["probe_coords"].items()
-            }
+            meta["_probe_coords"] = {k: v.tolist() for k, v in data["probe_coords"].items()}
 
         if "stim" in data:
             meta["_has_stim"] = True
@@ -222,13 +220,13 @@ def load_snirf(
 
 
 def save_snirf(
-    fname: Union[str, Path],
+    fname: str | Path,
     ts: np.ndarray,
     time: np.ndarray,
     meta: dict,
     *,
-    stim: Optional[np.ndarray] = None,
-    aux: Optional[np.ndarray] = None,
+    stim: np.ndarray | None = None,
+    aux: np.ndarray | None = None,
 ) -> None:
     """Write a time series to a SNIRF v1.0 file.
 
@@ -267,14 +265,22 @@ def save_snirf(
 
         if src_labels:
             dt = np.dtype([("label", h5py.string_dtype())])
-            probe.create_dataset("sourceLabels", data=np.array([(l,) for l in src_labels], dtype=dt))
+            probe.create_dataset(
+                "sourceLabels", data=np.array([(l,) for l in src_labels], dtype=dt)
+            )
         if det_labels:
             dt = np.dtype([("label", h5py.string_dtype())])
-            probe.create_dataset("detectorLabels", data=np.array([(l,) for l in det_labels], dtype=dt))
+            probe.create_dataset(
+                "detectorLabels", data=np.array([(l,) for l in det_labels], dtype=dt)
+            )
 
         probe_coords = meta.get("_probe_coords", {})
         for coord_name, coord_data in probe_coords.items():
-            arr = np.array(coord_data, dtype=np.float64) if isinstance(coord_data, list) else coord_data
+            arr = (
+                np.array(coord_data, dtype=np.float64)
+                if isinstance(coord_data, list)
+                else coord_data
+            )
             if isinstance(arr, np.ndarray):
                 probe.create_dataset(coord_name, data=arr)
 

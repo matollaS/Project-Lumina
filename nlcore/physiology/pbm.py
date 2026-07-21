@@ -16,8 +16,6 @@ References
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
-
 import numpy as np
 
 
@@ -83,10 +81,10 @@ def pbm_metrics(
     hbr: np.ndarray,
     fs: float,
     *,
-    stimulus_onset: Optional[np.ndarray] = None,
-    baseline_window: Tuple[float, float] = (-5.0, 0.0),
-    response_window: Tuple[float, float] = (0.0, 30.0),
-) -> Dict[str, float]:
+    stimulus_onset: np.ndarray | None = None,
+    baseline_window: tuple[float, float] = (-5.0, 0.0),
+    response_window: tuple[float, float] = (0.0, 30.0),
+) -> dict[str, float]:
     """Extract PBM-evoked haemodynamic response metrics.
 
     Parameters

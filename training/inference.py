@@ -24,10 +24,8 @@ API Integration
     - Returns JSON-serializable dicts
 """
 
-import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -38,6 +36,7 @@ logger = logging.getLogger("neurolumina.inference")
 # ---------------------------------------------------------------------------
 try:
     import torch
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -84,8 +83,8 @@ class Preprocessor:
         self.fs = fs
 
         # Normalisation stats (fitted on training data)
-        self.channel_mean: Optional[np.ndarray] = None
-        self.channel_std: Optional[np.ndarray] = None
+        self.channel_mean: np.ndarray | None = None
+        self.channel_std: np.ndarray | None = None
 
     def fit(self, data: np.ndarray):
         """Fit normalisation statistics from training data.
@@ -103,14 +102,14 @@ class Preprocessor:
             f"std={self.channel_std.mean():.3f}"
         )
 
-    def load_normalisation(self, path: Union[str, Path]):
+    def load_normalisation(self, path: str | Path):
         """Load pre-computed normalisation stats from a .npz file."""
         data = np.load(path)
         self.channel_mean = data["mean"]
         self.channel_std = data["std"]
         logger.info(f"Loaded normalisation stats from {path}")
 
-    def save_normalisation(self, path: Union[str, Path]):
+    def save_normalisation(self, path: str | Path):
         """Save normalisation stats for later inference."""
         np.savez_compressed(
             path,
@@ -211,10 +210,10 @@ if TORCH_AVAILABLE:
 
         def __init__(
             self,
-            model_path: Union[str, Path],
+            model_path: str | Path,
             device: str = "cpu",
-            label_map: Optional[Dict[int, str]] = None,
-            preprocessor: Optional[Preprocessor] = None,
+            label_map: dict[int, str] | None = None,
+            preprocessor: Preprocessor | None = None,
         ):
             self.device = torch.device(
                 device if device == "cpu" or torch.cuda.is_available() else "cpu"
@@ -238,7 +237,7 @@ if TORCH_AVAILABLE:
             hbr: np.ndarray,
             normalise: bool = True,
             return_logits: bool = False,
-        ) -> Dict:
+        ) -> dict:
             import time
 
             t0 = time.time()
@@ -252,9 +251,7 @@ if TORCH_AVAILABLE:
 
             logits_np = logits.cpu().numpy().flatten()
             predicted_class = int(np.argmax(logits_np))
-            confidence = float(
-                np.exp(logits_np[predicted_class]) / np.sum(np.exp(logits_np))
-            )
+            confidence = float(np.exp(logits_np[predicted_class]) / np.sum(np.exp(logits_np)))
             label = self.label_map.get(predicted_class, f"class_{predicted_class}")
 
             result = {
@@ -270,9 +267,7 @@ if TORCH_AVAILABLE:
                 },
             }
             if return_logits:
-                result["cognitive_load"]["logits"] = [
-                    round(v, 4) for v in logits_np.tolist()
-                ]
+                result["cognitive_load"]["logits"] = [round(v, 4) for v in logits_np.tolist()]
             return result
 
         def predict_batch(
@@ -281,12 +276,13 @@ if TORCH_AVAILABLE:
             hbr: np.ndarray,
             normalise: bool = True,
             return_logits: bool = False,
-        ) -> List[Dict]:
+        ) -> list[dict]:
             batch_size = hbo.shape[0]
             results = []
             for i in range(batch_size):
                 result = self.predict(
-                    hbo[i], hbr[i],
+                    hbo[i],
+                    hbr[i],
                     normalise=normalise,
                     return_logits=return_logits,
                 )
@@ -297,8 +293,8 @@ if TORCH_AVAILABLE:
         def predict_from_epochs(
             self,
             epochs: np.ndarray,
-            ch_names: Optional[List[str]] = None,
-        ) -> Dict:
+            ch_names: list[str] | None = None,
+        ) -> dict:
             n_epochs = epochs.shape[0]
             all_results = []
             for i in range(n_epochs):
@@ -320,9 +316,7 @@ if TORCH_AVAILABLE:
                 "epochs": all_results,
                 "aggregate": {
                     "n_epochs": n_epochs,
-                    "predicted_labels": [
-                        self.label_map.get(c, f"class_{c}") for c in classes
-                    ],
+                    "predicted_labels": [self.label_map.get(c, f"class_{c}") for c in classes],
                     "most_common": max(label_counts, key=label_counts.get),
                     "mean_confidence": round(float(np.mean(confidences)), 4),
                 },
@@ -333,8 +327,7 @@ else:
     class fNIRSInferenceEngine:  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError(
-                "PyTorch is required for fNIRSInferenceEngine. "
-                "Install with: pip install torch"
+                "PyTorch is required for fNIRSInferenceEngine. Install with: pip install torch"
             )
 
 
@@ -359,7 +352,7 @@ if __name__ == "__main__":
 
     # Add a simulated HRF-like increase for "high load"
     t = np.linspace(0, n_timepoints / 10, n_timepoints)
-    hrf = 3.0 * np.exp(-((t - 5.0) ** 2) / (2 * 2.0 ** 2))
+    hrf = 3.0 * np.exp(-((t - 5.0) ** 2) / (2 * 2.0**2))
     hbo += hrf[np.newaxis, :]  # boost HbO across all channels
 
     print(f"  HbO: {hbo.shape}, range [{hbo.min():.2f}, {hbo.max():.2f}]")
@@ -378,11 +371,11 @@ if __name__ == "__main__":
     tensor_norm = preprocessor(hbo, hbr, normalise=True)
     print(f"  Normalised tensor: mean={tensor_norm.mean():.3f}, std={tensor_norm.std():.3f}")
 
-    print(f"\n  Preprocessor API tested OK")
+    print("\n  Preprocessor API tested OK")
     print(f"  Expected input: (1, {n_optodes * 2}, {n_timepoints})")
-    print(f"  Expected output: (1, n_classes) logits")
+    print("  Expected output: (1, n_classes) logits")
 
     print("\n=== Self-test complete ===")
     print("\nNote: To test full inference pipeline, export a model first:")
     print("  python export.py --checkpoint checkpoints/best_model.pt --test")
-    print("  python -c \"from inference import fNIRSInferenceEngine; ...\"")
+    print('  python -c "from inference import fNIRSInferenceEngine; ..."')

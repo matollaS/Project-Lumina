@@ -32,18 +32,21 @@ dependencies = [
     "numpy>=1.24",
     "scipy>=1.10",
     "h5py>=3.8",
-    "mne>=1.5",
     "PyWavelets>=1.4.0",
     "scikit-learn>=1.2.0",
 ]
 
 [project.optional-dependencies]
+mne = [
+    "mne>=1.5",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.1",
     "mypy>=1.0",
     "sphinx>=7.0",
+    "mne>=1.5",
 ]
 docs = [
     "sphinx>=7.0",
@@ -53,7 +56,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://neurolumina.ai"
-Repository = "https://github.com/neurolumina/nlcore"
+Repository = "https://github.com/matollaS/Project-Lumina"
 Documentation = "https://docs.neurolumina.ai/nlcore"
 
 [tool.setuptools.packages.find]

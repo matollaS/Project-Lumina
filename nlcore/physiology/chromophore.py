@@ -20,14 +20,11 @@ References
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import numpy as np
-
 
 # Extinction coefficients (µM⁻¹·cm⁻¹) for common fNIRS wavelengths
 # Source: UCL Biomedical Optics Research Laboratory database
-EXTINCTION_COEFFS: dict[float, Tuple[float, float]] = {
+EXTINCTION_COEFFS: dict[float, tuple[float, float]] = {
     690: (0.312, 2.138),
     760: (0.456, 1.540),
     830: (0.726, 0.814),
@@ -35,7 +32,7 @@ EXTINCTION_COEFFS: dict[float, Tuple[float, float]] = {
 }
 
 
-def _interpolate_extinction(wavelength: float) -> Tuple[float, float]:
+def _interpolate_extinction(wavelength: float) -> tuple[float, float]:
     """Linearly interpolate extinction coefficients for an arbitrary wavelength."""
     wls = sorted(EXTINCTION_COEFFS.keys())
     if wavelength <= wls[0]:
@@ -91,13 +88,13 @@ def estimate_dpf(wavelength: float, age: float = 25.0) -> float:
     """
     a, b, c = 223.3, 0.05624, 0.8493
     d, e, f = -5.723e-7, 0.001245, -0.9025
-    dpf = a + b * (age ** c) + d * (wavelength ** 3) + e * (wavelength ** 2) + f * wavelength
+    dpf = a + b * (age**c) + d * (wavelength**3) + e * (wavelength**2) + f * wavelength
     return max(1.0, min(dpf, 15.0))
 
 
 def optical_density(
     intensity: np.ndarray,
-    baseline: Optional[np.ndarray] = None,
+    baseline: np.ndarray | None = None,
 ) -> np.ndarray:
     """Convert raw intensity to optical density (attenuation).
 
@@ -129,8 +126,8 @@ def modified_beer_lambert(
     od: np.ndarray,
     wavelengths: np.ndarray,
     d: np.ndarray,
-    dpf: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    dpf: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """Convert multi-wavelength optical density to HbO/HbR concentrations.
 
     Parameters
@@ -196,9 +193,9 @@ def compute_hbo_hbr(
     wavelengths: np.ndarray,
     d: np.ndarray,
     *,
-    dpf: Optional[np.ndarray] = None,
-    baseline: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    dpf: np.ndarray | None = None,
+    baseline: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """End-to-end pipeline: intensity → HbO/HbR concentration changes.
 
     Chains :func:`optical_density` → :func:`modified_beer_lambert`.

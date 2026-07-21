@@ -23,13 +23,9 @@ Usage
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional
-
-import numpy as np
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +42,7 @@ try:
     import torch.nn as nn
     import torch.optim as optim
     from torch.utils.tensorboard import SummaryWriter
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -56,7 +53,6 @@ except ImportError:
 sys.path.insert(0, str(Path(__file__).parent))
 from datamodule import fNIRSDataModule  # noqa: E402
 from model import HybridCNNBiLSTM, count_parameters  # noqa: E402
-
 
 # ===========================================================================
 # Training helpers
@@ -95,7 +91,7 @@ def train_one_epoch(
     optimizer: optim.Optimizer,
     device: torch.device,
     epoch: int,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Train for one epoch.
 
     Returns
@@ -141,7 +137,7 @@ def evaluate(
     criterion: nn.Module,
     device: torch.device,
     split: str = "val",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Evaluate model on validation set.
 
     Returns
@@ -161,9 +157,7 @@ def evaluate(
         losses.update(loss.item(), x.size(0))
         accs.update(acc, x.size(0))
 
-    logger.info(
-        f"  [{split}] Loss: {losses.avg:.4f} | Acc: {accs.avg:.3f}"
-    )
+    logger.info(f"  [{split}] Loss: {losses.avg:.4f} | Acc: {accs.avg:.3f}")
     return {"loss": losses.avg, "accuracy": accs.avg}
 
 
@@ -198,13 +192,8 @@ def main(args):
     dm.prepare_data()
     dm.setup()
 
-    logger.info(
-        f"  Train: {len(dm._train_dataset)} samples, "
-        f"Val: {len(dm._val_dataset)} samples"
-    )
-    logger.info(
-        f"  Shape: {dm.data_shape}, Classes: {dm.n_classes}"
-    )
+    logger.info(f"  Train: {len(dm._train_dataset)} samples, Val: {len(dm._val_dataset)} samples")
+    logger.info(f"  Shape: {dm.data_shape}, Classes: {dm.n_classes}")
 
     train_loader = dm.train_dataloader()
     val_loader = dm.val_dataloader()
@@ -248,13 +237,13 @@ def main(args):
     ckpt_dir.mkdir(parents=True, exist_ok=True)
 
     # Training
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info(f"Starting training for {args.epochs} epochs")
     logger.info(f"  Batch size: {args.batch_size}")
     logger.info(f"  Learning rate: {args.lr}")
     logger.info(f"  Weight decay: {args.weight_decay}")
     logger.info(f"  Dropout: {args.dropout}")
-    logger.info(f"{'='*60}\n")
+    logger.info(f"{'=' * 60}\n")
 
     best_val_loss = float("inf")
     best_val_acc = 0.0
@@ -268,13 +257,11 @@ def main(args):
         start_epoch = checkpoint["epoch"] + 1
         best_val_loss = checkpoint.get("best_val_loss", float("inf"))
         best_val_acc = checkpoint.get("best_val_acc", 0.0)
-        logger.info(f"Resumed from checkpoint: {args.resume} (epoch {start_epoch-1})")
+        logger.info(f"Resumed from checkpoint: {args.resume} (epoch {start_epoch - 1})")
 
     for epoch in range(start_epoch, args.epochs + 1):
         # Train
-        train_metrics = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, epoch
-        )
+        train_metrics = train_one_epoch(model, train_loader, criterion, optimizer, device, epoch)
 
         # Validate
         val_metrics = evaluate(model, val_loader, criterion, device, "val")
@@ -310,14 +297,14 @@ def main(args):
             torch.save(checkpoint, ckpt_path)
 
     # Final summary
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info("Training complete!")
     logger.info(f"  Best val accuracy: {best_val_acc:.3f}")
     logger.info(f"  Best val loss:     {best_val_loss:.4f}")
     logger.info(f"  Final train acc:   {history['train_acc'][-1]:.3f}")
     logger.info(f"  Final val acc:     {history['val_acc'][-1]:.3f}")
     logger.info(f"  Model saved to:    {ckpt_dir / 'best_model.pt'}")
-    logger.info(f"{'='*60}\n")
+    logger.info(f"{'=' * 60}\n")
 
     # Save history
     history_path = ckpt_dir / "history.json"
@@ -335,6 +322,7 @@ def main(args):
 # ===========================================================================
 # CLI
 # ===========================================================================
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -371,24 +359,16 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     # Training
-    parser.add_argument(
-        "--epochs", type=int, default=30, help="Number of epochs (default: 30)"
-    )
-    parser.add_argument(
-        "--batch_size", type=int, default=32, help="Batch size (default: 32)"
-    )
-    parser.add_argument(
-        "--lr", type=float, default=1e-3, help="Learning rate (default: 1e-3)"
-    )
+    parser.add_argument("--epochs", type=int, default=30, help="Number of epochs (default: 30)")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size (default: 32)")
+    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate (default: 1e-3)")
     parser.add_argument(
         "--weight_decay",
         type=float,
         default=1e-4,
         help="Weight decay (default: 1e-4)",
     )
-    parser.add_argument(
-        "--dropout", type=float, default=0.4, help="Dropout rate (default: 0.4)"
-    )
+    parser.add_argument("--dropout", type=float, default=0.4, help="Dropout rate (default: 0.4)")
     parser.add_argument(
         "--num_workers",
         type=int,

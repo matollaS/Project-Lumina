@@ -10,7 +10,7 @@ Integrates with nlcore (neurolumina-core) for SNIRF loading and preprocessing.
 Usage
 -----
     >>> from datamodule import fNIRSDataModule
-    >>> 
+    >>>
     >>> # With real SNIRF files
     >>> dm = fNIRSDataModule(
     ...     snirf_paths=["sub-001.snirf", "sub-002.snirf"],
@@ -20,16 +20,15 @@ Usage
     >>> dm.prepare_data()
     >>> dm.setup()
     >>> train_loader = dm.train_dataloader()
-    >>> 
+    >>>
     >>> # Or with mock data for development
     >>> dm = fNIRSDataModule(dataset="mock", config={"batch_size": 16})
     >>> dm.prepare_data()
 """
 
 import logging
-import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 
@@ -40,7 +39,8 @@ logger = logging.getLogger("neurolumina.training.datamodule")
 # ---------------------------------------------------------------------------
 try:
     import torch
-    from torch.utils.data import Dataset, DataLoader
+    from torch.utils.data import DataLoader, Dataset
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -49,6 +49,7 @@ except ImportError:
 
 try:
     from sklearn.model_selection import KFold
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -124,9 +125,7 @@ def get_dataset_config(dataset_name: str) -> dict:
     name = dataset_name.lower().replace("-", "_").replace(" ", "_")
     if name not in DATASET_CONFIGS:
         available = list(DATASET_CONFIGS.keys())
-        raise ValueError(
-            f"Unknown dataset '{dataset_name}'. Available: {available}"
-        )
+        raise ValueError(f"Unknown dataset '{dataset_name}'. Available: {available}")
     return dict(DATASET_CONFIGS[name])
 
 
@@ -152,8 +151,8 @@ class fNIRSDataset(Dataset):
         self,
         data: np.ndarray,
         labels: np.ndarray,
-        metadata: Optional[dict] = None,
-        transform: Optional[callable] = None,
+        metadata: dict | None = None,
+        transform: callable | None = None,
     ):
         self._data_np = data.astype(np.float32)
         self._labels_np = labels.astype(np.int64)
@@ -216,7 +215,7 @@ class MockfNIRSGenerator:
         self.cfg = dataset_config
         self.rng = np.random.default_rng(seed)
 
-    def generate(self) -> Dict[str, Any]:
+    def generate(self) -> dict[str, Any]:
         """Generate synthetic dataset.
 
         Returns
@@ -238,11 +237,9 @@ class MockfNIRSGenerator:
                 label = self.rng.integers(0, n_classes)
                 t = np.linspace(0, n_timepoints / 10, n_timepoints)
                 hrf_peak = 5.0
-                hrf = np.exp(-((t - hrf_peak) ** 2) / (2 * 2.0 ** 2))
+                hrf = np.exp(-((t - hrf_peak) ** 2) / (2 * 2.0**2))
                 hrf = hrf / hrf.max() * (label + 1) * 2.0
-                hrf_2d = hrf[np.newaxis, :] * self.rng.uniform(
-                    0.5, 1.5, size=(n_channels, 1)
-                )
+                hrf_2d = hrf[np.newaxis, :] * self.rng.uniform(0.5, 1.5, size=(n_channels, 1))
                 pink = self._pink_noise(n_timepoints, n_channels)
                 white = self.rng.normal(0, 0.1, size=(n_channels, n_timepoints))
                 noise = 0.3 * (pink + white)
@@ -263,13 +260,8 @@ class MockfNIRSGenerator:
                 "n_timepoints": n_timepoints,
                 "n_classes": n_classes,
                 "fs": self.cfg["fs"],
-                "ch_names": [
-                    f"{self.cfg['ch_names_prefix']}_{i}_hbo"
-                    for i in range(n_optodes)
-                ] + [
-                    f"{self.cfg['ch_names_prefix']}_{i}_hbr"
-                    for i in range(n_optodes)
-                ],
+                "ch_names": [f"{self.cfg['ch_names_prefix']}_{i}_hbo" for i in range(n_optodes)]
+                + [f"{self.cfg['ch_names_prefix']}_{i}_hbr" for i in range(n_optodes)],
                 "dataset": self.cfg["description"],
             },
         }
@@ -306,9 +298,9 @@ class fNIRSDataModule:
 
     def __init__(
         self,
-        snirf_paths: Optional[List[Union[str, Path]]] = None,
+        snirf_paths: list[str | Path] | None = None,
         dataset: str = "mock",
-        config: Optional[dict] = None,
+        config: dict | None = None,
     ):
         self.snirf_paths = snirf_paths or []
         self.dataset_name = dataset
@@ -319,15 +311,14 @@ class fNIRSDataModule:
         if config:
             self.config.update(config)
 
-        self._data: Optional[Dict[str, Any]] = None
-        self._train_dataset: Optional[fNIRSDataset] = None
-        self._val_dataset: Optional[fNIRSDataset] = None
-        self._test_dataset: Optional[fNIRSDataset] = None
+        self._data: dict[str, Any] | None = None
+        self._train_dataset: fNIRSDataset | None = None
+        self._val_dataset: fNIRSDataset | None = None
+        self._test_dataset: fNIRSDataset | None = None
 
         if not TORCH_AVAILABLE:
             logger.warning(
-                "PyTorch is not installed. DataLoaders require it. "
-                "Install with: pip install torch"
+                "PyTorch is not installed. DataLoaders require it. Install with: pip install torch"
             )
 
     # -----------------------------------------------------------------------
@@ -340,9 +331,7 @@ class fNIRSDataModule:
             return
 
         if self.dataset_name == "mock" or len(self.snirf_paths) == 0:
-            logger.info(
-                f"Generating mock data for '{self.dataset_name}' dataset"
-            )
+            logger.info(f"Generating mock data for '{self.dataset_name}' dataset")
             self._generate_mock_data()
         else:
             self._load_real_data()
@@ -402,6 +391,7 @@ class fNIRSDataModule:
 
                 # Simple epoch extraction (placeholder — real impl uses mne.Epochs)
                 from mne import Epochs
+
                 epochs = Epochs(
                     raw,
                     events=None,
@@ -416,12 +406,7 @@ class fNIRSDataModule:
                 )
 
                 label_map = self.config["label_map"]
-                labels = np.array(
-                    [
-                        label_map.get(ev["description"], -1)
-                        for ev in events
-                    ]
-                )
+                labels = np.array([label_map.get(ev["description"], -1) for ev in events])
                 valid = labels >= 0
                 data, labels = data[valid], labels[valid]
 
@@ -454,7 +439,7 @@ class fNIRSDataModule:
     # Dataset splitting
     # -----------------------------------------------------------------------
 
-    def setup(self, stage: Optional[str] = None):
+    def setup(self, stage: str | None = None):
         """Split data into train/val sets."""
         if self._data is None:
             self.prepare_data()
@@ -473,12 +458,8 @@ class fNIRSDataModule:
                 val_subject = unique_subjects[-1]
                 train_mask = subject_ids != val_subject
                 val_mask = subject_ids == val_subject
-                self._train_dataset = fNIRSDataset(
-                    data[train_mask], labels[train_mask]
-                )
-                self._val_dataset = fNIRSDataset(
-                    data[val_mask], labels[val_mask]
-                )
+                self._train_dataset = fNIRSDataset(data[train_mask], labels[train_mask])
+                self._val_dataset = fNIRSDataset(data[val_mask], labels[val_mask])
                 logger.info(
                     f"LOSO: {len(data[train_mask])} train, "
                     f"{len(data[val_mask])} val (held-out subj {val_subject})"
@@ -514,8 +495,7 @@ class fNIRSDataModule:
     def _require_torch(self):
         if not TORCH_AVAILABLE:
             raise ImportError(
-                "PyTorch is required for DataLoader creation. "
-                "Install with: pip install torch"
+                "PyTorch is required for DataLoader creation. Install with: pip install torch"
             )
 
     def train_dataloader(self):
@@ -543,7 +523,7 @@ class fNIRSDataModule:
     def test_dataloader(self):
         return self.val_dataloader()
 
-    def get_dataloader(self, batch_size: Optional[int] = None, shuffle: bool = True):
+    def get_dataloader(self, batch_size: int | None = None, shuffle: bool = True):
         """Combined DataLoader over all data (for quick testing)."""
         self._require_torch()
         if self._data is None:
@@ -592,8 +572,10 @@ if __name__ == "__main__":
     for ds_name in ["fnirs2mw", "mental_arithmetic", "mock"]:
         cfg = get_dataset_config(ds_name)
         print(f"--- {cfg['description']} ---")
-        print(f"  Subjects: {cfg['n_subjects']}, Channels: {cfg['n_channels']}, "
-              f"Classes: {cfg['n_classes']}, Epochs/subj: {cfg['epochs_per_subject']}")
+        print(
+            f"  Subjects: {cfg['n_subjects']}, Channels: {cfg['n_channels']}, "
+            f"Classes: {cfg['n_classes']}, Epochs/subj: {cfg['epochs_per_subject']}"
+        )
 
         dm = fNIRSDataModule(dataset=ds_name, config={"batch_size": 8})
         dm.prepare_data()

@@ -11,8 +11,8 @@ Please read it before participating.
 ## Development Setup
 
 ```bash
-git clone https://github.com/neurolumina/nlcore.git
-cd nlcore
+git clone https://github.com/matollaS/Project-Lumina.git
+cd Project-Lumina
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```

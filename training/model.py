@@ -20,7 +20,6 @@ Usage
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger("neurolumina.training.model")
 
@@ -59,8 +58,7 @@ def count_parameters(model) -> int:
 def _require_torch():
     if not TORCH_AVAILABLE:
         raise ImportError(
-            "PyTorch is required for model instantiation. "
-            "Install with: pip install torch"
+            "PyTorch is required for model instantiation. Install with: pip install torch"
         )
 
 
@@ -328,7 +326,7 @@ class MultiTaskModel(nn.Module):
         self,
         n_channels: int = 72,
         n_timepoints: int = 300,
-        task_config: Optional[Dict[str, Tuple[int, str]]] = None,
+        task_config: dict[str, tuple[int, str]] | None = None,
     ):
         _require_torch()
         super().__init__()
@@ -418,9 +416,7 @@ def create_model(
     _require_torch()
 
     if model_name not in MODEL_REGISTRY:
-        raise ValueError(
-            f"Unknown model '{model_name}'. Available: {list(MODEL_REGISTRY.keys())}"
-        )
+        raise ValueError(f"Unknown model '{model_name}'. Available: {list(MODEL_REGISTRY.keys())}")
 
     model_cls = MODEL_REGISTRY[model_name]
 

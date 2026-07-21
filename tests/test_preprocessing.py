@@ -1,7 +1,6 @@
 """Tests for preprocessing filters and motion correction."""
 
 import numpy as np
-import pytest
 
 
 class TestBandpassFilter:
@@ -67,21 +66,21 @@ class TestMotionCorrection:
 
     def test_stubs_no_error(self) -> None:
         """Test functional implementation of motion correction on simple mock arrays."""
-        from nlcore import correct_motion_spline, correct_motion_pca, correct_motion_wavelet
-        
+        from nlcore import correct_motion_pca, correct_motion_spline, correct_motion_wavelet
+
         # Create a mock 2D data array with an obvious artifact spike
         data = np.zeros((100, 2))
         data[40:60, :] = 100.0  # huge artifact
-        
+
         mask = np.zeros((100, 2), dtype=bool)
         mask[40:60, :] = True
-        
+
         # Spline test
         spline_corrected = correct_motion_spline(data, mask)
         assert spline_corrected.shape == data.shape
         # The artifact should be flattened out to near zero by spline
         assert np.max(np.abs(spline_corrected[40:60, :])) < 5.0
-        
+
         # PCA test (need more channels for PCA to work well, but it should not crash)
         data_pca = np.zeros((100, 6))
         data_pca[40:60, :] = 100.0
@@ -89,7 +88,7 @@ class TestMotionCorrection:
         mask_pca[40:60, :] = True
         pca_corrected = correct_motion_pca(data_pca, mask_pca, n_components=1)
         assert pca_corrected.shape == data_pca.shape
-        
+
         # Wavelet test
-        wave_corrected = correct_motion_wavelet(data, mask, wavelet='db4', level=2)
+        wave_corrected = correct_motion_wavelet(data, mask, wavelet="db4", level=2)
         assert wave_corrected.shape == data.shape

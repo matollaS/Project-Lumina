@@ -10,10 +10,12 @@ import pytest
 class TestLoadSnirf:
     def test_import(self) -> None:
         from nlcore import load_snirf
+
         assert callable(load_snirf)
 
     def test_snirf_file_class_exists(self) -> None:
         from nlcore.io.snirf import SnirfFile
+
         assert SnirfFile is not None
 
     def test_roundtrip(self) -> None:
@@ -59,9 +61,10 @@ class TestLoadSnirf:
             "sourceLabels": ["S1"],
             "detectorLabels": ["D1"],
         }
-        stim = np.array([(5.0, 2.0, 1, 1.0)],
-                        dtype=[("onset", "f8"), ("duration", "f8"),
-                               ("value", "i4"), ("amplitude", "f8")])
+        stim = np.array(
+            [(5.0, 2.0, 1, 1.0)],
+            dtype=[("onset", "f8"), ("duration", "f8"), ("value", "i4"), ("amplitude", "f8")],
+        )
         aux = np.random.default_rng(7).normal(0, 1, (n_times, 1))
 
         with tempfile.NamedTemporaryFile(suffix=".snirf", delete=False) as tmp:
@@ -77,16 +80,16 @@ class TestLoadSnirf:
 class TestSaveSnirf:
     def test_import(self) -> None:
         from nlcore import save_snirf
+
         assert callable(save_snirf)
 
     def test_defaults(self) -> None:
         """Minimal metadata should still work."""
-        from nlcore import save_snirf, load_snirf
+        from nlcore import load_snirf, save_snirf
 
         ts = np.ones((5, 1))
         time = np.arange(5.0)
-        meta = {"wavelengths": np.array([760.0]),
-                "sourceLabels": ["S1"], "detectorLabels": ["D1"]}
+        meta = {"wavelengths": np.array([760.0]), "sourceLabels": ["S1"], "detectorLabels": ["D1"]}
 
         with tempfile.NamedTemporaryFile(suffix=".snirf", delete=False) as tmp:
             fname = tmp.name

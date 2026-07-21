@@ -5,6 +5,6 @@ Spectroscopy Format (SNIRF), an HDF5-based standard for fNIRS data.
 It produces numpy arrays and MNE-compatible structures.
 """
 
-from .snirf import load_snirf, save_snirf, SnirfFile
+from .snirf import SnirfFile, load_snirf, save_snirf
 
 __all__ = ["load_snirf", "save_snirf", "SnirfFile"]

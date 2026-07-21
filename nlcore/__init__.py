@@ -21,24 +21,24 @@ Examples
 from importlib.metadata import version
 
 from nlcore.io.snirf import load_snirf, save_snirf
-from nlcore.preprocessing.filtering import bandpass_filter, notch_filter
-from nlcore.preprocessing.motion import (
-    detect_motion_artifacts,
-    correct_motion_spline,
-    correct_motion_pca,
-    correct_motion_wavelet,
-)
 from nlcore.physiology.chromophore import (
-    optical_density,
-    modified_beer_lambert,
     compute_hbo_hbr,
-    extinction_matrix,
     estimate_dpf,
+    extinction_matrix,
+    modified_beer_lambert,
+    optical_density,
 )
 from nlcore.physiology.pbm import (
     compute_pbm_dose,
     compute_pbm_fluence,
     pbm_metrics,
+)
+from nlcore.preprocessing.filtering import bandpass_filter, notch_filter
+from nlcore.preprocessing.motion import (
+    correct_motion_pca,
+    correct_motion_spline,
+    correct_motion_wavelet,
+    detect_motion_artifacts,
 )
 
 __all__ = [

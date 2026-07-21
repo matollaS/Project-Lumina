@@ -1,11 +1,8 @@
 # 🧠 NeuroLumina Core (`nlcore`)
 
 <p align="center">
-  <a href="https://pypi.org/project/nlcore/"><img src="https://img.shields.io/pypi/v/nlcore.svg" alt="PyPI"></a>
-  <a href="https://github.com/neurolumina/nlcore/actions"><img src="https://github.com/neurolumina/nlcore/workflows/CI/badge.svg" alt="CI"></a>
-  <a href="https://pypi.org/project/nlcore/"><img src="https://img.shields.io/pypi/pyversions/nlcore.svg" alt="Python"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License"></a>
-  <a href="https://github.com/neurolumina/nlcore"><img src="https://img.shields.io/github/stars/neurolumina/nlcore?style=social" alt="Stars"></a>
+  <a href="https://github.com/matollaS/Project-Lumina/actions"><img src="https://github.com/matollaS/Project-Lumina/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
 </p>
 
 <p align="center">
@@ -41,14 +38,8 @@ models and dashboards.
 ## Installation
 
 ```bash
-pip install nlcore
-```
-
-Dev install:
-
-```bash
-git clone https://github.com/neurolumina/neurolumina-core.git
-cd neurolumina-core
+git clone https://github.com/matollaS/Project-Lumina.git
+cd Project-Lumina
 pip install -e ".[dev]"
 ```
 
@@ -121,7 +112,7 @@ print(E)  # [[ε_HbO(λ1), ε_HbR(λ1)], [ε_HbO(λ2), ε_HbR(λ2)]]
 ## Package Structure
 
 ```
-neurolumina-core/
+Project-Lumina/
 ├── nlcore/
 │   ├── __init__.py              # Top-level API (16 public functions)
 │   ├── io/
@@ -134,7 +125,8 @@ neurolumina-core/
 │   │   └── pbm.py               # compute_pbm_dose, fluence, pbm_metrics
 │   └── utils/
 │       └── mne_compat.py        # SourceDetectorMap, raw_to_mne, mne_to_raw
-├── tests/                       # pytest (33 tests)
+├── tests/                       # pytest (33 tests)\r
+│   └── data/                    # test fixtures (.snirf, etc.)
 ├── docs/                        # Sphinx docs
 ├── examples/
 ├── pyproject.toml
@@ -182,8 +174,8 @@ neurolumina-core/
 ## Contributing
 
 ```bash
-git clone https://github.com/neurolumina/neurolumina-core.git
-cd neurolumina-core
+git clone https://github.com/matollaS/Project-Lumina.git
+cd Project-Lumina
 pip install -e ".[dev]"
 pytest   # 33 tests
 ```

@@ -6,14 +6,8 @@ Installation
 
 .. code-block:: bash
 
-    pip install nlcore
-
-Or for development:
-
-.. code-block:: bash
-
-    git clone https://github.com/neurolumina/nlcore.git
-    cd nlcore
+    git clone https://github.com/matollaS/Project-Lumina.git
+    cd Project-Lumina
     pip install -e ".[dev]"
 
 Basic Usage

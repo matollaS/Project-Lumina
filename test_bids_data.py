@@ -1,16 +1,22 @@
 import sys
+from pathlib import Path
+
 import numpy as np
+
 import nlcore
 
+DATA_DIR = Path(__file__).resolve().parent / "tests" / "data"
+
+
 def test_bids_snirf():
-    fname = "sub-01_task-tapping_nirs.snirf"
+    fname = str(DATA_DIR / "sub-01_task-tapping_nirs.snirf")
     print(f"Loading {fname}...")
     try:
         ts, time, meta = nlcore.load_snirf(fname)
         print("Successfully loaded.")
         print(f"Data shape: {ts.shape}")
         print(f"Wavelengths: {meta.get('wavelengths')}")
-        
+
         # Test chromophore conversion
         wls = meta.get("wavelengths")
         if wls is not None:
@@ -26,6 +32,7 @@ def test_bids_snirf():
             print("No wavelengths found in metadata.")
     except Exception as e:
         print(f"Error occurred: {e}", file=sys.stderr)
+
 
 if __name__ == "__main__":
     test_bids_snirf()

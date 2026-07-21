@@ -4,6 +4,7 @@ example_basic_pipeline.py — Full nlcore pipeline with synthetic data.
 
 Usage:  python example_basic_pipeline.py
 """
+
 from __future__ import annotations
 
 import tempfile
@@ -27,10 +28,9 @@ def main() -> None:
     ts = np.zeros((n_times, n_wl, n_sd))
     for wl in range(n_wl):
         for ch in range(n_sd):
-            ts[:, wl, ch] = (
-                0.3 * np.sin(2 * np.pi * 0.08 * t + rng.uniform(0, 2 * np.pi))
-                + 0.02 * np.cumsum(rng.normal(0, 0.01, n_times))
-            )
+            ts[:, wl, ch] = 0.3 * np.sin(
+                2 * np.pi * 0.08 * t + rng.uniform(0, 2 * np.pi)
+            ) + 0.02 * np.cumsum(rng.normal(0, 0.01, n_times))
 
     # Insert a motion spike
     spike = slice(int(300 * fs), int(300.5 * fs))
@@ -39,8 +39,8 @@ def main() -> None:
     meta = {
         "SubjectID": "demo-001",
         "wavelengths": wavelengths,
-        "sourceLabels": [f"S{i+1}" for i in range(n_sd)],
-        "detectorLabels": [f"D{i+1}" for i in range(n_sd)],
+        "sourceLabels": [f"S{i + 1}" for i in range(n_sd)],
+        "detectorLabels": [f"D{i + 1}" for i in range(n_sd)],
         "distances": distances,
     }
     print(f"   Shape: {ts.shape}  |  fs = {fs} Hz  |  λ = {wavelengths.tolist()}")
@@ -70,7 +70,7 @@ def main() -> None:
 
     # ── 4. Extinction matrix & DPF ──────────────────────────────────
     print("[4/5] Extinction matrix & DPF estimation …")
-    from nlcore.physiology.chromophore import extinction_matrix, estimate_dpf
+    from nlcore.physiology.chromophore import estimate_dpf, extinction_matrix
 
     E = extinction_matrix(wavelengths)
     print(f"   E (ε_HbO, ε_HbR):\n{E}")

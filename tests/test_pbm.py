@@ -1,6 +1,5 @@
 """Tests for PBM (photobiomodulation) metrics."""
 
-import numpy as np
 import pytest
 
 

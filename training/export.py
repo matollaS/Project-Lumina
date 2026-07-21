@@ -26,7 +26,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +40,7 @@ logger = logging.getLogger("export")
 try:
     import torch
     import torch.nn as nn
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -58,7 +58,7 @@ def export_to_torchscript(
     n_channels: int = 72,
     n_timepoints: int = 300,
     method: str = "script",
-) -> Tuple[Path, Optional[Path]]:
+) -> tuple[Path, Path | None]:
     """Export a PyTorch model to TorchScript.
 
     Parameters
@@ -260,36 +260,51 @@ def get_parser() -> argparse.ArgumentParser:
         description="NeuroLumina — Export HybridCNNBiLSTM to TorchScript"
     )
     parser.add_argument(
-        "--checkpoint", type=str, default=None,
+        "--checkpoint",
+        type=str,
+        default=None,
         help="Path to trained model checkpoint (.pt)",
     )
     parser.add_argument(
-        "--output", type=str, default="models",
+        "--output",
+        type=str,
+        default="models",
         help="Output directory for exported models (default: models)",
     )
     parser.add_argument(
-        "--n_channels", type=int, default=72,
+        "--n_channels",
+        type=int,
+        default=72,
         help="Number of input channels (default: 72)",
     )
     parser.add_argument(
-        "--n_timepoints", type=int, default=300,
+        "--n_timepoints",
+        type=int,
+        default=300,
         help="Number of time samples (default: 300)",
     )
     parser.add_argument(
-        "--n_classes", type=int, default=3,
+        "--n_classes",
+        type=int,
+        default=3,
         help="Number of output classes (default: 3)",
     )
     parser.add_argument(
-        "--method", type=str, default="both",
+        "--method",
+        type=str,
+        default="both",
         choices=["script", "trace", "both"],
         help="Export method: script, trace, or both (default: both)",
     )
     parser.add_argument(
-        "--test", action="store_true",
+        "--test",
+        action="store_true",
         help="Run test inference on exported model",
     )
     parser.add_argument(
-        "--device", type=str, default="cpu",
+        "--device",
+        type=str,
+        default="cpu",
         help="Device to use (default: cpu)",
     )
     return parser
