@@ -63,7 +63,7 @@ print(f"Wavelengths: {meta['wavelengths']}")
 hbo, hbr = nlcore.compute_hbo_hbr(
     ts,
     wavelengths=meta["wavelengths"],
-    d=meta.get("distances", [3.0] * ts.shape[1]),
+    d=meta.get("distances"),
 )
 print(f"HbO range: [{hbo.min():+.3f}, {hbo.max():+.3f}] µM")
 print(f"HbR range: [{hbr.min():+.3f}, {hbr.max():+.3f}] µM")
@@ -98,9 +98,8 @@ od = optical_density(ts)  # auto-baseline = temporal mean
 
 # Step 2: OD → HbO/HbR via modified Beer-Lambert
 wavelengths = meta["wavelengths"]
-d = [3.0] * 8   # 3 cm S-D separation for each channel
 dpf = [estimate_dpf(wl) for wl in wavelengths]
-hbo, hbr = modified_beer_lambert(od, wavelengths, d, dpf=dpf)
+hbo, hbr = modified_beer_lambert(od, wavelengths, dpf=dpf)
 
 # Inspect the extinction matrix
 E = extinction_matrix(wavelengths)

@@ -125,7 +125,7 @@ def optical_density(
 def modified_beer_lambert(
     od: np.ndarray,
     wavelengths: np.ndarray,
-    d: np.ndarray,
+    d: np.ndarray | None = None,
     dpf: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Convert multi-wavelength optical density to HbO/HbR concentrations.
@@ -137,8 +137,9 @@ def modified_beer_lambert(
         for interleaved channels.
     wavelengths : np.ndarray
         Wavelengths in nm, shape ``(n_wl,)``.
-    d : np.ndarray
-        Source–detector distances in cm, shape ``(n_sd_pairs,)``.
+    d : np.ndarray or None
+        Source–detector distances in cm, shape ``(n_sd_pairs,)``. If None,
+        defaults to 3.0 cm for all pairs.
     dpf : np.ndarray or None
         DPF per wavelength. Estimated via Scholkmann-Wolf if None.
 
@@ -149,7 +150,6 @@ def modified_beer_lambert(
     """
     od = np.asarray(od, dtype=np.float64)
     wavelengths = np.asarray(wavelengths, dtype=np.float64)
-    d = np.asarray(d, dtype=np.float64)
     n_wl = len(wavelengths)
 
     # Normalise shape to (n_times, n_wl, n_sd)
@@ -165,6 +165,13 @@ def modified_beer_lambert(
         od = od.reshape(n_times, n_wl, n_sd)
     else:
         raise ValueError(f"od must be 2-D or 3-D, got {od.shape}")
+
+    if d is None:
+        d = np.full(n_sd, 3.0, dtype=np.float64)
+    else:
+        d = np.asarray(d, dtype=np.float64)
+        if d.shape != (n_sd,):
+            raise ValueError(f"d must have shape ({n_sd},), got {d.shape}")
 
     # Extinction matrix + DPF
     E = extinction_matrix(wavelengths)
@@ -191,7 +198,7 @@ def modified_beer_lambert(
 def compute_hbo_hbr(
     intensity: np.ndarray,
     wavelengths: np.ndarray,
-    d: np.ndarray,
+    d: np.ndarray | None = None,
     *,
     dpf: np.ndarray | None = None,
     baseline: np.ndarray | None = None,
@@ -205,7 +212,7 @@ def compute_hbo_hbr(
     intensity : np.ndarray
         Raw intensity, shape ``(n_times, n_wl, n_sd)`` or interleaved ``(n_times, n_total)``.
     wavelengths : np.ndarray — shape ``(n_wl,)``.
-    d : np.ndarray — S-D distances, shape ``(n_sd,)``.
+    d : np.ndarray or None — S-D distances, shape ``(n_sd,)``. Defaults to 3.0 cm.
     dpf : np.ndarray or None
     baseline : np.ndarray or None
 
