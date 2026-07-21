@@ -161,7 +161,7 @@ Project-Lumina/
 
 ## Open Core → Premium
 
-`nlcore` is free forever. The [NeuroLumina Platform](https://neurolumina.ai) adds:
+This repository contains `nlcore`, our public current version which is free and open-source forever. The full NeuroLumina Platform (currently under development in a private repository) adds:
 
 - **Pre-trained deep-learning models** (CNN / Bi-LSTM) for cognitive-load classification
 - **Real-time inference API** (<100 ms latency)
