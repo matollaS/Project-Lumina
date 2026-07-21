@@ -177,7 +177,7 @@ Project-Lumina/
 git clone https://github.com/matollaS/Project-Lumina.git
 cd Project-Lumina
 pip install -e ".[dev]"
-pytest   # 33 tests
+pytest   # 70+ tests
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -191,6 +191,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - Delpy, D. T., et al. (1988). *Phys. Med. Biol.*, 33(12), 1433.
 - Scholkmann, F., & Wolf, M. (2013). *J. Biomed. Opt.*, 18(10), 105004.
 - Hamblin, M. R. (2016). *BBA Clin.*, 6, 113–124.
+
+## Acknowledgements
+
+- The sample fNIRS dataset (`sub-01_task-tapping_nirs.snirf`) included for testing is sourced from the public [rob-luke/BIDS-NIRS-Tapping](https://github.com/rob-luke/BIDS-NIRS-Tapping) repository, a standard community reference dataset.
 
 ## License
 
