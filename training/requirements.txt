@@ -12,7 +12,7 @@ numpy>=1.24
 scipy>=1.10
 h5py>=3.8
 mne>=1.5
-mne-nirs>=0.5
+mne-nirs>=0.7.3
 
 # === ML & Data Science ===
 scikit-learn>=1.2
