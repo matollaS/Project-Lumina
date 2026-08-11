@@ -211,7 +211,12 @@ def load_snirf(
         if "stim" in data:
             meta["_has_stim"] = True
 
-        meta["fs"] = 1.0 / float(np.median(np.diff(time)))
+        if time.size < 2:
+            raise ValueError("SNIRF time vector must contain at least two samples")
+        intervals = np.diff(time)
+        if not np.all(np.isfinite(intervals)) or np.any(intervals <= 0):
+            raise ValueError("SNIRF time vector must be finite and strictly increasing")
+        meta["fs"] = 1.0 / float(np.median(intervals))
         meta["wavelengths"] = np.array(meta["_wavelengths"])
         meta["sourceLabels"] = meta["_source_labels"]
         meta["detectorLabels"] = meta["_detector_labels"]
@@ -246,12 +251,28 @@ def save_snirf(
     aux : np.ndarray or None
         Auxiliary signals, shape ``(n_times, n_aux)``.
     """
+    ts = np.asarray(ts, dtype=np.float64)
+    time = np.asarray(time, dtype=np.float64).reshape(-1)
+    if ts.ndim != 2:
+        raise ValueError("ts must have shape (n_times, n_channels)")
+    if time.size != ts.shape[0]:
+        raise ValueError("time length must match the number of rows in ts")
+    if time.size < 2 or not np.all(np.isfinite(time)) or np.any(np.diff(time) <= 0):
+        raise ValueError("time must contain at least two finite, strictly increasing samples")
+    if not np.all(np.isfinite(ts)):
+        raise ValueError("ts must contain only finite values")
+    if aux is not None:
+        aux = np.asarray(aux, dtype=np.float64)
+        if aux.ndim not in (1, 2) or aux.shape[0] != ts.shape[0]:
+            raise ValueError("aux must have the same number of time samples as ts")
+
+    structural_keys = {"wavelengths", "sourceLabels", "detectorLabels", "fs"}
     with h5py.File(fname, "w") as f:
         nirs = f.create_group("nirs")
 
         mdt = nirs.create_group("metaDataTags")
         for key, val in meta.items():
-            if not key.startswith("_"):
+            if not key.startswith("_") and key not in structural_keys:
                 mdt.create_dataset(key, data=np.bytes_(str(val)))
         if "SubjectID" not in meta:
             mdt.create_dataset("SubjectID", data=np.bytes_("unknown"))
@@ -261,17 +282,17 @@ def save_snirf(
         probe.create_dataset("wavelengths", data=wavelengths)
 
         src_labels = meta.get("sourceLabels", meta.get("_source_labels", []))
-        det_labels = meta.get("detectorLabels", meta.get("_detectorLabels", []))
+        det_labels = meta.get("detectorLabels", meta.get("_detector_labels", []))
 
         if src_labels:
             dt = np.dtype([("label", h5py.string_dtype())])
             probe.create_dataset(
-                "sourceLabels", data=np.array([(l,) for l in src_labels], dtype=dt)
+                "sourceLabels", data=np.array([(label,) for label in src_labels], dtype=dt)
             )
         if det_labels:
             dt = np.dtype([("label", h5py.string_dtype())])
             probe.create_dataset(
-                "detectorLabels", data=np.array([(l,) for l in det_labels], dtype=dt)
+                "detectorLabels", data=np.array([(label,) for label in det_labels], dtype=dt)
             )
 
         probe_coords = meta.get("_probe_coords", {})
@@ -285,8 +306,8 @@ def save_snirf(
                 probe.create_dataset(coord_name, data=arr)
 
         data_grp = nirs.create_group("data1")
-        data_grp.create_dataset("dataTimeSeries", data=np.asarray(ts, dtype=np.float64))
-        data_grp.create_dataset("time", data=np.asarray(time, dtype=np.float64).flatten())
+        data_grp.create_dataset("dataTimeSeries", data=ts)
+        data_grp.create_dataset("time", data=time)
 
         if stim is not None:
             sgrp = data_grp.create_group("stim")
@@ -294,4 +315,4 @@ def save_snirf(
 
         if aux is not None:
             agrp = data_grp.create_group("aux")
-            agrp.create_dataset("dataTimeSeries", data=np.asarray(aux, dtype=np.float64))
+            agrp.create_dataset("dataTimeSeries", data=aux)

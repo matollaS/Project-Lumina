@@ -100,3 +100,35 @@ class TestSaveSnirf:
             assert np.allclose(ts2, ts)
         finally:
             Path(fname).unlink(missing_ok=True)
+
+    @pytest.mark.parametrize(
+        ("ts", "time", "message"),
+        [
+            (np.ones(5), np.arange(5.0), "ts must have shape"),
+            (np.ones((5, 1)), np.arange(4.0), "time length"),
+            (np.ones((5, 1)), np.array([0, 1, 1, 3, 4]), "strictly increasing"),
+        ],
+    )
+    def test_invalid_arrays_are_rejected(self, ts, time, message) -> None:
+        from nlcore import save_snirf
+
+        with tempfile.NamedTemporaryFile(suffix=".snirf") as tmp:
+            with pytest.raises(ValueError, match=message):
+                save_snirf(tmp.name, ts, time, {})
+
+    def test_structural_metadata_is_not_stringified(self) -> None:
+        import h5py
+
+        from nlcore import save_snirf
+
+        meta = {
+            "wavelengths": np.array([760.0]),
+            "sourceLabels": ["S1"],
+            "detectorLabels": ["D1"],
+            "fs": 10.0,
+        }
+        with tempfile.NamedTemporaryFile(suffix=".snirf") as tmp:
+            save_snirf(tmp.name, np.ones((5, 1)), np.arange(5) / 10, meta)
+            with h5py.File(tmp.name) as h5:
+                tags = h5["nirs/metaDataTags"]
+                assert not ({"wavelengths", "sourceLabels", "detectorLabels", "fs"} & set(tags))

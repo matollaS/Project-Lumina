@@ -116,9 +116,23 @@ def correct_motion_spline(
     corrected : np.ndarray
         Motion-corrected signal, same shape as *data*.
     """
-    from scipy.interpolate import CubicSpline
+    from scipy.interpolate import make_interp_spline
 
-    data = np.asarray(data)
+    data = np.asarray(data, dtype=np.float64)
+    if data.ndim not in (1, 2):
+        raise ValueError("data must be a 1-D or 2-D array")
+    if axis not in (0, -data.ndim):
+        data = np.moveaxis(data, axis, 0)
+        moved_axis = axis
+    else:
+        moved_axis = None
+    mask = np.asarray(mask, dtype=bool)
+    if moved_axis is not None:
+        mask = np.moveaxis(mask, moved_axis, 0)
+    if mask.shape != data.shape:
+        raise ValueError("mask must have the same shape as data")
+    if order < 1:
+        raise ValueError("order must be at least 1")
     is_1d = data.ndim == 1
     if is_1d:
         data = data[:, np.newaxis]
@@ -136,12 +150,15 @@ def correct_motion_spline(
         if np.sum(valid) < 2:
             continue
 
-        # Fit cubic spline to valid points
-        cs = CubicSpline(times[valid], data[valid, ch], bc_type="natural")
-        # Replace only the masked points
-        corrected[m, ch] = cs(times[m])
+        # CubicSpline needs at least two points, but lowering the degree for
+        # sparse clean data avoids a misleading ``order`` argument and wild
+        # extrapolation from an underdetermined cubic.
+        degree = min(order, int(np.sum(valid)) - 1)
+        spline = make_interp_spline(times[valid], data[valid, ch], k=degree)
+        corrected[m, ch] = spline(times[m])
 
-    return corrected[:, 0] if is_1d else corrected
+    result = corrected[:, 0] if is_1d else corrected
+    return np.moveaxis(result, 0, moved_axis) if moved_axis is not None else result
 
 
 def correct_motion_pca(
@@ -175,7 +192,13 @@ def correct_motion_pca(
     """
     from sklearn.decomposition import PCA
 
-    data = np.asarray(data)
+    data = np.asarray(data, dtype=np.float64)
+    if data.ndim != 2:
+        raise ValueError("PCA correction requires a 2-D array")
+    data = np.moveaxis(data, axis, 0)
+    mask = np.moveaxis(np.asarray(mask, dtype=bool), axis, 0)
+    if mask.shape != data.shape:
+        raise ValueError("mask must have the same shape as data")
     n_times, n_channels = data.shape
 
     # We apply PCA only on the motion-corrupted segments to find the motion components
@@ -183,13 +206,18 @@ def correct_motion_pca(
     m_any = np.any(mask, axis=1) if mask.ndim > 1 else mask
 
     if not np.any(m_any):
-        return data.copy()
+        return np.moveaxis(data.copy(), 0, axis)
 
     # Extract corrupted data
     corrupted_data = data[m_any]
+    if not np.any(np.var(corrupted_data, axis=0) > np.finfo(np.float64).eps):
+        return np.moveaxis(data.copy(), 0, axis)
 
     # Fit PCA
-    pca = PCA(n_components=n_components)
+    max_components = min(corrupted_data.shape)
+    if n_components < 1:
+        raise ValueError("n_components must be at least 1")
+    pca = PCA(n_components=min(n_components, max_components))
     pca.fit(corrupted_data)
 
     # Reconstruct whole signal without the top principal components
@@ -197,11 +225,11 @@ def correct_motion_pca(
     # data_clean = data - data_proj @ components
     components = pca.components_  # shape (n_components, n_channels)
 
-    projected = data @ components.T
+    projected = (data - pca.mean_) @ components.T
     motion_recon = projected @ components
 
     corrected = data - motion_recon
-    return corrected
+    return np.moveaxis(corrected, 0, axis)
 
 
 def correct_motion_wavelet(
@@ -242,24 +270,38 @@ def correct_motion_wavelet(
     """
     import pywt
 
-    data = np.asarray(data)
+    data = np.asarray(data, dtype=np.float64)
+    if data.ndim not in (1, 2):
+        raise ValueError("data must be a 1-D or 2-D array")
+    data = np.moveaxis(data, axis, 0)
+    mask = np.moveaxis(np.asarray(mask, dtype=bool), axis, 0)
+    if mask.shape != data.shape:
+        raise ValueError("mask must have the same shape as data")
     is_1d = data.ndim == 1
     if is_1d:
         data = data[:, np.newaxis]
 
     n_times, n_channels = data.shape
-    corrected = np.zeros_like(data)
+    corrected = data.copy()
 
     for ch in range(n_channels):
         ch_data = data[:, ch]
 
-        # Decompose
-        coeffs = pywt.wavedec(ch_data, wavelet, level=level)
+        ch_mask = mask[:, ch]
+        if not np.any(ch_mask):
+            continue
+        max_level = pywt.dwt_max_level(n_times, pywt.Wavelet(wavelet).dec_len)
+        actual_level = min(level, max_level)
+        if actual_level < 1:
+            continue
+        coeffs = pywt.wavedec(ch_data, wavelet, level=actual_level)
 
         # Soft thresholding based on universal threshold (Donoho & Johnstone)
         # We apply thresholding to detail coefficients
         sigma = np.median(np.abs(coeffs[-1] - np.median(coeffs[-1]))) / 0.6745
-        threshold = sigma * np.sqrt(2 * np.log(n_times))
+        threshold = float(sigma * np.sqrt(2 * np.log(n_times)))
+        if not np.isfinite(threshold) or threshold <= 0:
+            continue
 
         new_coeffs = [coeffs[0]]  # Keep approximation
         for detail in coeffs[1:]:
@@ -273,6 +315,8 @@ def correct_motion_wavelet(
         elif len(rec) < n_times:
             rec = np.pad(rec, (0, n_times - len(rec)), mode="edge")
 
-        corrected[:, ch] = rec
+        # A correction mask must not silently modify clean observations.
+        corrected[ch_mask, ch] = rec[ch_mask]
 
-    return corrected[:, 0] if is_1d else corrected
+    result = corrected[:, 0] if is_1d else corrected
+    return np.moveaxis(result, 0, axis)
