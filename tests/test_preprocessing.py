@@ -1,6 +1,7 @@
 """Tests for preprocessing filters and motion correction."""
 
 import numpy as np
+import pytest
 
 
 class TestBandpassFilter:
@@ -92,3 +93,25 @@ class TestMotionCorrection:
         # Wavelet test
         wave_corrected = correct_motion_wavelet(data, mask, wavelet="db4", level=2)
         assert wave_corrected.shape == data.shape
+
+    def test_axis_and_mask_are_honoured(self) -> None:
+        from nlcore import correct_motion_pca, correct_motion_spline, correct_motion_wavelet
+
+        data = np.vstack([np.sin(np.linspace(0, 2 * np.pi, 80))] * 4)
+        data[:, 30:35] += 10
+        mask = np.zeros_like(data, dtype=bool)
+        mask[:, 30:35] = True
+
+        for correction in (correct_motion_spline, correct_motion_wavelet):
+            corrected = correction(data, mask, axis=1)
+            assert corrected.shape == data.shape
+            assert np.array_equal(corrected[~mask], data[~mask])
+
+        corrected = correct_motion_pca(data, mask, n_components=99, axis=1)
+        assert corrected.shape == data.shape
+
+    def test_invalid_mask_shape_is_rejected(self) -> None:
+        from nlcore import correct_motion_spline
+
+        with pytest.raises(ValueError, match="same shape"):
+            correct_motion_spline(np.ones((10, 2)), np.zeros(10, dtype=bool))
