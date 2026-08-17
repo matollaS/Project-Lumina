@@ -120,9 +120,7 @@ class IndividualDoseResponseModel:
                 self.covariate_mean_ = np.empty(0, dtype=np.float64)
                 self.covariate_scale_ = np.empty(0, dtype=np.float64)
             elif self.n_covariates_ != 0:
-                raise ValueError(
-                    f"model expects {self.n_covariates_} covariate columns, got none"
-                )
+                raise ValueError(f"model expects {self.n_covariates_} covariate columns, got none")
             return np.empty((n_rows, 0), dtype=np.float64)
 
         cov = np.asarray(covariates, dtype=np.float64)
@@ -267,9 +265,7 @@ class IndividualDoseResponseModel:
                 mask = subjects == subject
                 z = np.column_stack([np.ones(np.sum(mask)), dose_scaled[mask]])
                 mean[mask] += z @ self.subject_effects_[subject]
-                subject_leverage = np.einsum(
-                    "ij,jk,ik->i", z, self.subject_gram_inv_[subject], z
-                )
+                subject_leverage = np.einsum("ij,jk,ik->i", z, self.subject_gram_inv_[subject], z)
                 variance_factor[mask] += np.maximum(subject_leverage, 0.0)
                 used_subject[mask] = True
 
