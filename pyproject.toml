@@ -78,9 +78,14 @@ select = ["E", "F", "I", "N", "W", "UP"]
 # Matrix/intensity symbols follow standard optical-spectroscopy notation in the
 # chromophore implementation and its reference-validation tests. Keep the
 # scientific notation while retaining strict Ruff rules elsewhere.
-"nlcore/physiology/chromophore.py" = ["N806", "E501"]
+"nlcore/physiology/chromophore.py" = ["N806"]
 "tests/test_chromophore.py" = ["N806", "E741"]
 "tests/test_chromophore_edge_cases.py" = ["N806", "E741", "I001"]
+
+[tool.ruff.format]
+# Keep this large reference-validation fixture stable; it predates formatter
+# enforcement and a full rewrite would create unrelated review noise.
+exclude = ["tests/test_chromophore_edge_cases.py"]
 
 [tool.mypy]
 python_version = "3.10"
