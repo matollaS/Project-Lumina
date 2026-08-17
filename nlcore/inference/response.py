@@ -19,8 +19,8 @@ clinical personalization claim.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -163,7 +163,7 @@ class IndividualDoseResponseModel:
         *,
         subject_ids: Sequence[str] | np.ndarray | None = None,
         covariates: np.ndarray | Sequence[Sequence[float]] | None = None,
-    ) -> "IndividualDoseResponseModel":
+    ) -> IndividualDoseResponseModel:
         """Fit the global and optional subject-specific response models.
 
         Parameters
