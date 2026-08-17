@@ -47,7 +47,9 @@ def test_repeated_subjects_receive_regularized_adjustments() -> None:
 
 def test_covariates_are_standardized_and_used() -> None:
     dose = np.linspace(0.0, 5.0, 12)
-    context = np.linspace(-2.0, 2.0, 12)
+    # Keep the nuisance/context variable independent of dose so the two
+    # coefficients are identifiable in this exact synthetic recovery test.
+    context = np.array([-2.0, 1.0, -1.0, 2.0, 0.5, -0.5, 1.5, -1.5, 0.0, 2.5, -2.5, 0.75])
     response = 0.7 * dose + 2.5 * context
 
     model = IndividualDoseResponseModel(degree=1, alpha=0.0)
