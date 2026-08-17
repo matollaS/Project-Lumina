@@ -4,6 +4,17 @@ All notable changes to `nlcore` are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added `IndividualDoseResponseModel`, the first explicit inference-layer model
+  in the public core. It fits a global polynomial ridge dose-response model with
+  optional covariates and regularized subject-specific residual adjustments for
+  repeated observations.
+- Added `ResponsePrediction` with approximate predictive uncertainty and an
+  explicit flag showing whether subject-specific calibration was used.
+- Added `extract_dose_response()` to make the handoff from PBM measurement
+  metrics to inference explicit.
+- Added response-model API docs, usage guidance, and synthetic tests.
+
 ### Documentation
 - Reframed the public core as a measurement-first research library and separated
   **measurement**, **inference**, and **intervention** claims.
@@ -16,6 +27,8 @@ All notable changes to `nlcore` are documented in this file.
   separate broadband/hyperspectral NIRS validation programme.
 - Added a research-use statement: `nlcore` is not a medical device and does not
   diagnose disease or recommend PBM treatment.
+- Documented the response model as an associative research tool rather than a
+  causal estimator or dose-prescribing system.
 
 ## [0.1.0] — 2026-07-16
 

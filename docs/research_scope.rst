@@ -14,9 +14,9 @@ The three-layer model
 
 Question: *What did the instruments reliably observe?*
 
-The public ``nlcore`` package currently lives primarily at this layer. It
-supports SNIRF I/O, fNIRS preprocessing, HbO/HbR estimation, motion-artifact
-handling, PBM dose/fluence calculations, haemodynamic response extraction, and
+The public ``nlcore`` package still lives primarily at this layer. It supports
+SNIRF I/O, fNIRS preprocessing, HbO/HbR estimation, motion-artifact handling,
+PBM dose/fluence calculations, haemodynamic response extraction, and
 MNE-compatible data interchange.
 
 Current public capabilities should not be interpreted as direct measurement of
@@ -34,6 +34,16 @@ Examples include cognitive-load classification, state-transition modelling, or
 individualised response estimation. These are model outputs rather than direct
 sensor observables and require prospective validation, calibration, uncertainty
 estimation, and out-of-distribution testing.
+
+``nlcore`` now contains a first explicit inference-layer component:
+:class:`nlcore.IndividualDoseResponseModel`. It fits a transparent global
+PBM-dose/response association with optional regularized subject-specific
+adjustments from repeated observations. The model reports approximate predictive
+uncertainty and explicitly falls back to the global model for unseen subjects.
+
+This is a research association model, not a causal estimator or prescribing
+system. The public API intentionally does not provide dose optimization or dose
+recommendation. See :doc:`response_model`.
 
 3. Intervention
 ~~~~~~~~~~~~~~~
@@ -91,8 +101,10 @@ Clinical translation
 
 The near-term clinical research wedge is measurement-first: quantify response,
 standardise dosimetry, and learn individual dose-response relationships before
-claiming therapeutic optimisation. See :doc:`pbm_evidence` for the current
-condition-specific evidence tiers.
+claiming therapeutic optimisation. The new inference module makes that handoff
+explicit in software while preserving the distinction between association and
+causal intervention. See :doc:`pbm_evidence` for the current condition-specific
+evidence tiers and :doc:`response_model` for the modelling contract.
 
 Human-state science
 ~~~~~~~~~~~~~~~~~~~

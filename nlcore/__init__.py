@@ -9,6 +9,7 @@ Modules
 io          — SNIRF file I/O and data loading
 preprocessing — Motion correction, filtering, artifact removal
 physiology  — Chromophore conversion (modified Beer-Lambert), PBM metrics
+inference   — Research dose-response and individualized response modelling
 utils       — MNE-Python compatibility utilities and helpers
 
 Examples
@@ -20,6 +21,11 @@ Examples
 
 from importlib.metadata import version
 
+from nlcore.inference.response import (
+    IndividualDoseResponseModel,
+    ResponsePrediction,
+    extract_dose_response,
+)
 from nlcore.io.snirf import load_snirf, save_snirf
 from nlcore.physiology.chromophore import (
     compute_hbo_hbr,
@@ -63,6 +69,10 @@ __all__ = [
     "compute_pbm_dose",
     "compute_pbm_fluence",
     "pbm_metrics",
+    # Inference — individualized response modelling
+    "IndividualDoseResponseModel",
+    "ResponsePrediction",
+    "extract_dose_response",
 ]
 
 try:
