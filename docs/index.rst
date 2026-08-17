@@ -1,4 +1,3 @@
-"""
 NeuroLumina Core (nlcore) Documentation
 ========================================
 
@@ -7,6 +6,8 @@ NeuroLumina Core (nlcore) Documentation
    :caption: Contents:
 
    getting_started
+   research_scope
+   pbm_evidence
    api/io
    api/preprocessing
    api/physiology
@@ -18,4 +19,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-"""
