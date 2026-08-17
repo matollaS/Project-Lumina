@@ -222,7 +222,11 @@ def compute_hbo_hbr(
     od = optical_density(intensity, baseline=baseline)
     if d is None:
         n_wl = len(np.asarray(wavelengths))
-        n_total = np.asarray(intensity).shape[1] if np.asarray(intensity).ndim == 2 else np.asarray(intensity).shape[2]
+        n_total = (
+            np.asarray(intensity).shape[1]
+            if np.asarray(intensity).ndim == 2
+            else np.asarray(intensity).shape[2]
+        )
         n_sd = n_total // n_wl if np.asarray(intensity).ndim == 2 else n_total
         d = np.full(n_sd, 3.0)
     return modified_beer_lambert(od, wavelengths, d, dpf=dpf)

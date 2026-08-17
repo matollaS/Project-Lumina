@@ -1,12 +1,15 @@
-"""Photobiomodulation (PBM) metrics for fNIRS-integrated devices.
+"""Photobiomodulation (PBM) metrics for fNIRS-integrated experiments.
 
-PBM (also known as LLLT — low-level light therapy) uses near-infrared
-light to stimulate cellular metabolism.  When combined with HD-fNIRS
-monitoring, we can quantify:
+PBM uses red and near-infrared light to modulate biological tissue. The
+mechanisms, optimal parameters, safety, and efficacy depend on the experimental
+or clinical context and remain active research topics.
 
-* **Dose** — total energy delivered to tissue (J/cm²)
+This module does not encode therapeutic claims. It provides reproducible
+quantities for PBM experiments:
+
+* **Dose** — total radiant exposure at the specified surface (J/cm²)
 * **Fluence rate** — optical power per unit area (mW/cm²)
-* **Haemodynamic response** — HbO/HbR changes attributable to PBM
+* **Haemodynamic response** — HbO/HbR changes temporally associated with PBM
 
 References
 ----------
@@ -15,8 +18,6 @@ References
 """
 
 from __future__ import annotations
-
-from typing import Dict, Optional, Tuple
 
 import numpy as np
 
@@ -44,7 +45,7 @@ def compute_pbm_dose(
     duration_s : float
         Irradiation duration in seconds.
     duty_cycle : float
-        Duty cycle of pulsed operation (0–1).  Default 1.0 (CW).
+        Duty cycle of pulsed operation (0–1). Default 1.0 (CW).
 
     Returns
     -------
@@ -133,14 +134,14 @@ def pbm_metrics(
     hbr: np.ndarray,
     fs: float,
     *,
-    stimulus_onset: Optional[np.ndarray] = None,
-    baseline_window: Tuple[float, float] = (-5.0, 0.0),
-    response_window: Tuple[float, float] = (0.0, 30.0),
-    power_mw: Optional[float] = None,
-    area_cm2: Optional[float] = None,
+    stimulus_onset: np.ndarray | None = None,
+    baseline_window: tuple[float, float] = (-5.0, 0.0),
+    response_window: tuple[float, float] = (0.0, 30.0),
+    power_mw: float | None = None,
+    area_cm2: float | None = None,
     duty_cycle: float = 1.0,
-    dose_duration_s: Optional[float] = None,
-) -> Dict[str, float]:
+    dose_duration_s: float | None = None,
+) -> dict[str, float]:
     """Extract PBM-evoked haemodynamic response metrics.
 
     Parameters
@@ -152,8 +153,8 @@ def pbm_metrics(
     fs : float
         Sampling frequency in Hz.
     stimulus_onset : np.ndarray or None
-        Onset times (in samples) of PBM pulses.  If ``None``, the
-        entire recording is treated as a single continuous block.
+        Onset times (in samples) of PBM pulses. If ``None``, the entire
+        recording is treated as a single continuous block.
     baseline_window : tuple
         ``(start, end)`` in seconds relative to stimulus onset for
         baseline computation.
