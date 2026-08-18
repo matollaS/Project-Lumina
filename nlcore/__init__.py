@@ -10,6 +10,7 @@ io          — SNIRF file I/O and data loading
 preprocessing — Motion correction, filtering, artifact removal
 physiology  — Chromophore conversion (modified Beer-Lambert), PBM metrics
 inference   — Research dose-response and individualized response modelling
+validation  — Prospective and held-out model evaluation
 utils       — MNE-Python compatibility utilities and helpers
 
 Examples
@@ -46,6 +47,7 @@ from nlcore.preprocessing.motion import (
     correct_motion_wavelet,
     detect_motion_artifacts,
 )
+from nlcore.validation.prospective import ValidationReport, evaluate_unseen_subjects
 
 __all__ = [
     # I/O
@@ -73,6 +75,9 @@ __all__ = [
     "IndividualDoseResponseModel",
     "ResponsePrediction",
     "extract_dose_response",
+    # Validation — held-out generalization
+    "ValidationReport",
+    "evaluate_unseen_subjects",
 ]
 
 try:
