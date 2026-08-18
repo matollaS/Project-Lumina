@@ -9,10 +9,12 @@ NeuroLumina Core (nlcore) Documentation
    research_scope
    pbm_evidence
    response_model
+   prospective_validation
    api/io
    api/preprocessing
    api/physiology
    api/inference
+   api/validation
    api/utils
 
 Indices and tables
