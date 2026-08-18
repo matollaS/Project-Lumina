@@ -1,0 +1,91 @@
+{
+  "protocol_id": "lumina-pbm-response-validation-v1",
+  "status": "draft-not-locked",
+  "purpose": "Prospectively evaluate whether a pre-specified PBM response model generalizes to entirely unseen subjects.",
+  "scientific_scope": "Research validation only; not a treatment-selection, dose-recommendation, diagnostic, or clinical-efficacy protocol.",
+  "primary_endpoint": {
+    "response_key": "hbo_auc",
+    "source": "nlcore.physiology.pbm.pbm_metrics",
+    "interpretation": "Magnitude of the baseline-subtracted HbO response integrated over the pre-specified response window.",
+    "change_after_lock": "not permitted without a new protocol version"
+  },
+  "design": {
+    "unit_of_holdout": "subject",
+    "primary_generalization_test": "all observations from held-out subjects remain excluded from model fitting and calibration",
+    "repeat_observations": "permitted within subjects",
+    "subject_specific_adjustment_on_primary_holdout": false,
+    "randomization_or_sham": "TBD if this protocol is embedded in an interventional human study",
+    "blinding": "TBD if this protocol is embedded in an interventional human study"
+  },
+  "pbm_dosimetry": {
+    "dose_range_j_cm2": null,
+    "wavelength_nm": null,
+    "power_mw": null,
+    "beam_area_cm2": null,
+    "duty_cycle": null,
+    "pulse_frequency_hz": null,
+    "duration_s": null,
+    "lock_requirement": "All stimulation parameters and allowed ranges must be specified from the approved experimental/safety protocol before first prospective subject is enrolled. The software model must not choose them."
+  },
+  "measurement": {
+    "baseline_window_s": [-5.0, 0.0],
+    "response_window_s": [0.0, 30.0],
+    "channel_aggregation": "mean across included channels as currently implemented by pbm_metrics",
+    "motion_quality_rule": "TBD before protocol lock",
+    "minimum_signal_quality_rule": "TBD before protocol lock",
+    "excluded_channel_rule": "TBD before protocol lock",
+    "preprocessing_version": "pin nlcore commit/tag before protocol lock"
+  },
+  "covariates": {
+    "allowed": [],
+    "rule": "Covariates must be named and encoded before protocol lock. Adding covariates after inspecting prospective outcomes requires a new protocol version."
+  },
+  "model": {
+    "class": "nlcore.inference.response.IndividualDoseResponseModel",
+    "degree": 2,
+    "alpha": 1.0,
+    "subject_alpha": 2.0,
+    "min_subject_samples": 3,
+    "interval_z": 1.96,
+    "hyperparameter_rule": "Freeze before prospective evaluation; no tuning on held-out subjects."
+  },
+  "primary_metrics": [
+    "rmse",
+    "mae",
+    "bias",
+    "interval_coverage",
+    "mean_interval_width"
+  ],
+  "success_criteria": {
+    "rmse_threshold": null,
+    "mae_threshold": null,
+    "absolute_bias_threshold": null,
+    "minimum_interval_coverage": null,
+    "maximum_interval_width": null,
+    "lock_requirement": "Numerical thresholds must be justified and frozen before prospective outcome data are inspected."
+  },
+  "sample_plan": {
+    "target_total_subjects": null,
+    "target_holdout_subjects": null,
+    "target_observations_per_subject": null,
+    "power_or_precision_analysis": "required before protocol lock"
+  },
+  "analysis_integrity": {
+    "no_subject_leakage": true,
+    "no_hyperparameter_tuning_on_holdout": true,
+    "report_all_locked_primary_metrics": true,
+    "report_missingness_and_exclusions": true,
+    "report_protocol_deviations": true,
+    "retain_failed_or_null_results": true
+  },
+  "lock_conditions": [
+    "ethics/safety framework resolved for any human stimulation study",
+    "PBM stimulation parameters and allowed dose range specified",
+    "signal-quality and exclusion rules specified",
+    "covariates frozen",
+    "model hyperparameters frozen",
+    "sample-size or precision rationale completed",
+    "numerical success criteria frozen",
+    "software commit/tag pinned"
+  ]
+}

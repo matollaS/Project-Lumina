@@ -14,6 +14,14 @@ All notable changes to `nlcore` are documented in this file.
 - Added `extract_dose_response()` to make the handoff from PBM measurement
   metrics to inference explicit.
 - Added response-model API docs, usage guidance, and synthetic tests.
+- Added `evaluate_unseen_subjects()` and `ValidationReport` for subject-level
+  held-out validation without repeated-subject leakage.
+- Added a machine-readable draft protocol at
+  `protocols/pbm_response_validation_v1.json` with explicit lock conditions,
+  primary metrics, unresolved safety/hardware fields, and analysis-integrity
+  rules.
+- Added prospective-validation tests covering split integrity, multiple held-out
+  subjects, covariate handling, and invalid split/schema cases.
 
 ### Documentation
 - Reframed the public core as a measurement-first research library and separated
@@ -29,6 +37,9 @@ All notable changes to `nlcore` are documented in this file.
   diagnose disease or recommend PBM treatment.
 - Documented the response model as an associative research tool rather than a
   causal estimator or dose-prescribing system.
+- Added `docs/prospective_validation.rst`, defining unseen-subject generalization,
+  protocol locking, primary metrics, and the boundary between predictive
+  validation and causal/clinical claims.
 
 ## [0.1.0] — 2026-07-16
 
